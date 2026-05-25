@@ -1,0 +1,748 @@
+import { useState, useEffect, useCallback } from "react";
+
+const WAKTU_DETIK = 90 * 60;
+
+const KELAS_OPTIONS = ["8A","8B","8C","8D","8E","8F","8G","8H","8I"];
+
+const SOAL_PG = [
+  {
+    no: 1,
+    stimulus: "Dalam sebuah pertunjukan musik, seorang guru meminta siswa memperhatikan rangkaian bunyi yang membentuk suatu kalimat lagu yang dapat dinyanyikan.",
+    soal: "Rangkaian bunyi yang memiliki susunan tertentu dan dapat dinyanyikan atau dimainkan dalam musik disebut....",
+    pilihan: ["A. Ritme","B. Birama","C. Melodi","D. Harmoni"],
+    kunci: "C"
+  },
+  {
+    no: 2,
+    stimulus: "Seorang pemain drum memukul alat musiknya secara teratur dengan pola panjang-pendek bunyi yang berulang-ulang sehingga membuat pendengar ingin bergerak mengikuti irama.",
+    soal: "Pola panjang-pendek bunyi yang teratur dan berulang dalam musik disebut....",
+    pilihan: ["A. Melodi","B. Ritme","C. Tempo","D. Dinamika"],
+    kunci: "B"
+  },
+  {
+    no: 3,
+    stimulus: "Perhatikan tanda birama berikut: 3/4. Angka 3 menunjukkan jumlah ketukan dalam satu ruas birama, sedangkan angka 4 menunjukkan nilai not yang mendapat satu ketukan.",
+    soal: "Lagu dengan tanda birama 3/4 terasa seperti....",
+    pilihan: ["A. Mars yang tegas dan bersemangat","B. Waltz yang mengalun lembut berirama tiga","C. Rock yang kuat dan keras","D. Ballad yang sangat lambat"],
+    kunci: "B"
+  },
+  {
+    no: 4,
+    stimulus: "Seorang dirigen memberi aba-aba kepada orkestra sebelum memulai lagu dengan menyebutkan kata 'Andante'. Para pemain pun memainkan musik dengan tempo tertentu.",
+    soal: "Istilah tempo 'Andante' dalam musik berarti....",
+    pilihan: ["A. Sangat cepat","B. Cepat dan bersemangat","C. Sedang (seperti orang berjalan)","D. Sangat lambat"],
+    kunci: "C"
+  },
+  {
+    no: 5,
+    stimulus: "Pada sebuah partitur lagu, terdapat simbol 'f' di bagian awal dan simbol 'p' di bagian tengah lagu. Penyanyi mengikuti petunjuk tersebut saat tampil.",
+    soal: "Simbol 'f' dalam notasi musik melambangkan dinamika....",
+    pilihan: ["A. Piano (lembut)","B. Forte (keras)","C. Mezzo forte (agak keras)","D. Pianissimo (sangat lembut)"],
+    kunci: "B"
+  },
+  {
+    no: 6,
+    stimulus: "Dua alat musik, yaitu gitar dan biola, memainkan nada yang sama (misalnya nada C) pada waktu yang bersamaan. Namun pendengar tetap bisa membedakan suara keduanya.",
+    soal: "Karakteristik yang membedakan suara gitar dan biola meskipun memainkan nada yang sama disebut....",
+    pilihan: ["A. Tempo","B. Dinamika","C. Timbre (warna suara)","D. Ritme"],
+    kunci: "C"
+  },
+  {
+    no: 7,
+    stimulus: "Dalam pelajaran musik, Bu Sari menjelaskan dua jenis tangga nada. Tangga nada pertama terdiri dari 7 nada pokok dengan dua jenis jarak (1 dan ½), sedangkan tangga nada kedua hanya memiliki 5 nada pokok.",
+    soal: "Tangga nada yang hanya terdiri dari 5 nada pokok disebut tangga nada....",
+    pilihan: ["A. Diatonis mayor","B. Diatonis minor","C. Pentatonis","D. Kromatis"],
+    kunci: "C"
+  },
+  {
+    no: 8,
+    stimulus: "Gamelan Jawa menggunakan sistem nada tersendiri yang berbeda dari musik Barat. Tangga nada yang digunakan hanya memiliki lima nada dalam satu oktaf.",
+    soal: "Jumlah nada pokok dalam tangga nada pentatonis adalah....",
+    pilihan: ["A. 4 nada","B. 5 nada","C. 7 nada","D. 12 nada"],
+    kunci: "B"
+  },
+  {
+    no: 9,
+    stimulus: "Seorang pelatih vokal mengajarkan siswanya cara mengambil napas sebelum bernyanyi. Ia meminta siswa meletakkan tangan di perut untuk merasakan gerakan saat menghirup dan menghembuskan napas.",
+    soal: "Teknik pernapasan yang baik untuk bernyanyi adalah pernapasan....",
+    pilihan: ["A. Dada","B. Bahu","C. Diafragma","D. Perut"],
+    kunci: "C"
+  },
+  {
+    no: 10,
+    stimulus: "Ketika penyanyi menyanyikan lagu, beberapa nada terdengar sedikit meleset dari nada yang seharusnya. Pelatih vokal mengingatkan pentingnya memperhatikan ketepatan nada.",
+    soal: "Ketepatan tinggi rendah nada yang dinyanyikan sesuai dengan melodi yang benar disebut....",
+    pilihan: ["A. Artikulasi","B. Intonasi","C. Frasering","D. Resonansi"],
+    kunci: "B"
+  },
+  {
+    no: 11,
+    stimulus: "Saat penampilan paduan suara, beberapa penyanyi mengucapkan kata-kata lagu dengan tidak jelas sehingga pendengar sulit memahami lirik yang dinyanyikan.",
+    soal: "Kejelasan pengucapan kata-kata dalam bernyanyi disebut....",
+    pilihan: ["A. Intonasi","B. Resonansi","C. Artikulasi","D. Vibrasi"],
+    kunci: "C"
+  },
+  {
+    no: 12,
+    stimulus: "Pak Dedi selalu menginstruksikan siswanya untuk mengembangkan bagian perut (bukan dada atau bahu) saat menghirup udara sebelum bernyanyi agar suara terdengar lebih kuat dan stabil.",
+    soal: "Teknik pernapasan yang menggunakan otot di antara rongga dada dan rongga perut disebut pernapasan....",
+    pilihan: ["A. Klavikula","B. Dada","C. Diafragma","D. Bahu"],
+    kunci: "C"
+  },
+  {
+    no: 13,
+    stimulus: "Seorang penyanyi menyanyikan lagu 'Ibu Pertiwi' dengan nada yang tepat dan artikulasi yang jelas, namun ekspresi wajah dan penjiwaan terhadap makna lagu masih kurang terasa.",
+    soal: "Kemampuan penyanyi untuk merasakan dan mengungkapkan isi/jiwa lagu dalam penampilan disebut....",
+    pilihan: ["A. Intonasi","B. Artikulasi","C. Penghayatan lagu","D. Pernapasan"],
+    kunci: "C"
+  },
+  {
+    no: 14,
+    stimulus: "Saat mengunjungi museum budaya Jawa, siswa kelas 8 melihat berbagai instrumen gamelan. Salah satu instrumen berbentuk bilah-bilah logam yang diletakkan berjajar dan dipukul menggunakan alat pemukul.",
+    soal: "Instrumen gamelan yang berbentuk bilah-bilah logam berjajar dan dipukul adalah....",
+    pilihan: ["A. Kendhang","B. Saron","C. Gong","D. Bonang"],
+    kunci: "B"
+  },
+  {
+    no: 15,
+    stimulus: "Dalam ilmu organologi (klasifikasi alat musik), alat musik dikelompokkan berdasarkan sumber bunyinya. Ada yang berbunyi karena dipukul membrannya, ditiup, dipetik senarnya, dsb.",
+    soal: "Alat musik yang sumber bunyinya berasal dari getaran membran/kulit yang dipukul disebut....",
+    pilihan: ["A. Aerofon","B. Kordofon","C. Membranofon","D. Idiofon"],
+    kunci: "C"
+  },
+  {
+    no: 16,
+    stimulus: "Dalam pertunjukan gamelan Jawa, ada satu instrumen yang paling penting karena berperan mengatur tempo dan irama seluruh permainan gamelan. Pemain instrumen ini seolah menjadi 'konduktor' bagi kelompok gamelan.",
+    soal: "Instrumen gamelan yang berfungsi sebagai pengatur tempo dan irama adalah....",
+    pilihan: ["A. Saron","B. Bonang","C. Kendhang","D. Gender"],
+    kunci: "C"
+  },
+  {
+    no: 17,
+    stimulus: "Andi ingin belajar memainkan alat musik tradisional yang dapat memainkan beberapa nada sekaligus (akord) untuk mengiringi melodi. Gurunya merekomendasikan salah satu alat musik gamelan.",
+    soal: "Alat musik gamelan yang termasuk alat musik harmonis karena dapat membunyikan beberapa nada sekaligus adalah....",
+    pilihan: ["A. Kendhang","B. Gong","C. Saron","D. Bonang"],
+    kunci: "D"
+  },
+  {
+    no: 18,
+    stimulus: "Pak Guru mengelompokkan alat musik di kelas menjadi tiga kelompok: (1) rebana dan kendhang yang hanya menghasilkan bunyi berirama, (2) recorder dan suling yang dapat memainkan melodi, dan (3) gitar yang dapat memainkan akord.",
+    soal: "Alat musik yang HANYA menghasilkan bunyi ritmis tanpa nada melodi disebut alat musik....",
+    pilihan: ["A. Melodis","B. Harmonis","C. Ritmis","D. Dinamis"],
+    kunci: "C"
+  },
+  {
+    no: 19,
+    stimulus: "Dalam kunjungan ke pameran seni budaya Nusantara, siswa menemukan alat musik berbentuk seperti perahu kecil yang terbuat dari kayu dan dipukul dengan stik, berasal dari daerah Jawa Tengah dan Yogyakarta.",
+    soal: "Alat musik tradisional gamelan yang berasal dari Jawa Tengah adalah....",
+    pilihan: ["A. Kolintang","B. Angklung","C. Gamelan Jawa","D. Sasando"],
+    kunci: "C"
+  },
+  {
+    no: 20,
+    stimulus: "Seorang pemain saron dalam kelompok gamelan memukul bilahan logam menggunakan pemukul khusus. Setelah memukul satu nada, ia segera menahan bilahan sebelumnya agar tidak berdengung terlalu lama.",
+    soal: "Teknik bermain saron yang mematikan bunyi nada sebelumnya dengan cara menahan bilahan yang telah dipukul disebut teknik....",
+    pilihan: ["A. Tabuhan","B. Memathet","C. Nginthil","D. Mipil"],
+    kunci: "B"
+  },
+  {
+    no: 21,
+    stimulus: "Dalam pertunjukan gamelan, terdapat satu instrumen berukuran sangat besar yang selalu dibunyikan pada bagian akhir kalimat musik, memberi tanda bahwa satu bagian lagu telah selesai.",
+    soal: "Instrumen gamelan yang berfungsi menandai akhir kalimat musik/gatra adalah....",
+    pilihan: ["A. Kendhang","B. Saron","C. Gong","D. Gender"],
+    kunci: "C"
+  },
+  {
+    no: 22,
+    stimulus: "Di dalam seperangkat gamelan Jawa, terdapat dua buah bonang dengan fungsi berbeda. Bonang pertama berukuran lebih besar dengan nada lebih rendah, sementara bonang kedua berukuran lebih kecil dengan nada lebih tinggi.",
+    soal: "Bonang yang berukuran lebih besar dengan nada lebih rendah disebut....",
+    pilihan: ["A. Bonang penerus","B. Bonang barung","C. Bonang panembung","D. Bonang saron"],
+    kunci: "B"
+  },
+  {
+    no: 23,
+    stimulus: "Siswa kelas 8 mendapat tugas membentuk kelompok dan memainkan lagu secara bersama-sama menggunakan berbagai alat musik (recorder, pianika, dan gitar) dengan pembagian suara yang berbeda-beda.",
+    soal: "Kegiatan memainkan musik bersama-sama oleh beberapa orang dengan berbagai alat musik disebut....",
+    pilihan: ["A. Orkestra","B. Ansambel musik","C. Paduan suara","D. Duet"],
+    kunci: "B"
+  },
+  {
+    no: 24,
+    stimulus: "Bu Rini membagi siswa ke dalam dua kelompok. Kelompok pertama memainkan tiga buah recorder bersama-sama. Kelompok kedua memainkan recorder, pianika, dan gitar bersama-sama.",
+    soal: "Kelompok pertama yang menggunakan alat musik sejenis disebut ansambel....",
+    pilihan: ["A. Campuran","B. Sejenis","C. Perkusi","D. Orkestra"],
+    kunci: "B"
+  },
+  {
+    no: 25,
+    stimulus: "Kelompok ansambel sekolah ingin menampilkan sebuah lagu dengan formasi: satu orang memainkan melodi utama, beberapa orang memainkan iringan harmoni, dan satu orang mengatur ritme.",
+    soal: "Alat musik yang paling tepat berperan sebagai pengatur ritme dalam ansambel sekolah adalah....",
+    pilihan: ["A. Pianika","B. Recorder","C. Gitar melodi","D. Perkusi (drum/tamborin)"],
+    kunci: "D"
+  },
+  {
+    no: 26,
+    stimulus: "Dalam latihan ansambel, Dani memainkan bagian melodi, Sari memainkan akord pengiring, dan Budi memainkan pola ritme. Setiap anggota memiliki peran penting agar musik terdengar indah.",
+    soal: "Dalam ansambel musik, alat musik yang memainkan akord/harmoni untuk mengiringi melodi disebut....",
+    pilihan: ["A. Instrumen melodi","B. Instrumen harmonis/pengiring","C. Instrumen ritmis","D. Instrumen solois"],
+    kunci: "B"
+  },
+  {
+    no: 27,
+    stimulus: "Kelompok ansambel A memainkan lagu dengan volume yang sangat keras, tempo yang tidak seragam, dan setiap pemain memainkan ritme yang berbeda-beda sehingga musik terdengar kacau dan tidak nyaman didengar.",
+    soal: "Unsur yang PALING penting agar musik ansambel terdengar harmonis dan indah adalah....",
+    pilihan: ["A. Setiap pemain bermain sekeras-kerasnya","B. Kekompakan, keselarasan, dan kerjasama antar pemain","C. Menggunakan alat musik yang mahal","D. Memilih lagu yang sangat populer"],
+    kunci: "B"
+  },
+  {
+    no: 28,
+    stimulus: "Perhatikan penggalan notasi angka berikut: 1 2 3 4 │ 5 6 7 i . Angka-angka tersebut mewakili nada-nada dalam tangga nada diatonis.",
+    soal: "Dalam notasi angka, simbol '5' melambangkan nada....",
+    pilihan: ["A. Do","B. Re","C. Sol","D. Mi"],
+    kunci: "C"
+  },
+  {
+    no: 29,
+    stimulus: "Dalam notasi angka, not yang diberi satu titik di belakangnya memiliki nilai ketukan yang berbeda dari not tanpa titik. Jika not seperempat (satu ketukan) diberi titik, maka nilainya berubah.",
+    soal: "Nilai ketukan dari not 1. (not angka 1 bertitik) dalam birama 4/4 adalah....",
+    pilihan: ["A. 1 ketukan","B. 1½ ketukan","C. 2 ketukan","D. 3 ketukan"],
+    kunci: "B"
+  },
+  {
+    no: 30,
+    stimulus: "Dalam sebuah partitur lagu bernotasi angka, terdapat simbol '0' di antara rangkaian angka-angka nada. Simbol ini menandakan bahwa pada ketukan tersebut tidak ada bunyi yang dimainkan.",
+    soal: "Simbol '0' dalam notasi angka melambangkan....",
+    pilihan: ["A. Nada rendah","B. Nada tinggi","C. Tanda istirahat (diam)","D. Nada do rendah"],
+    kunci: "C"
+  },
+  {
+    no: 31,
+    stimulus: "Seorang siswa mempelajari notasi balok. Ia mendapati bahwa not-not ditulis pada lima garis horizontal yang disebut paranada/staff. Setiap garis dan spasi memiliki nama nada tersendiri.",
+    soal: "Lima garis horizontal tempat menuliskan not balok disebut....",
+    pilihan: ["A. Klef","B. Birama","C. Paranada (staff)","D. Tanda kunci"],
+    kunci: "C"
+  },
+  {
+    no: 32,
+    stimulus: "Dalam notasi balok, berbagai jenis not memiliki nilai ketukan yang berbeda-beda. Not berbentuk oval kosong dengan tangkai disebut not setengah, dan not berbentuk oval kosong tanpa tangkai disebut not penuh.",
+    soal: "Not balok yang memiliki nilai 4 ketukan (satu birama penuh dalam 4/4) adalah....",
+    pilihan: ["A. Not seperempat","B. Not setengah","C. Not penuh (semibreve)","D. Not seperdelapan"],
+    kunci: "C"
+  },
+  {
+    no: 33,
+    stimulus: "Perhatikan posisi not pada paranada dengan kunci G. Garis-garis dihitung dari bawah ke atas (garis 1, 2, 3, 4, 5). Not yang terletak pada garis kedua dari bawah dalam kunci G adalah nada Sol (G).",
+    soal: "Dalam paranada berkunci G, nada yang terletak pada garis pertama (paling bawah) adalah....",
+    pilihan: ["A. Do (C)","B. Mi (E)","C. Sol (G)","D. La (A)"],
+    kunci: "B"
+  },
+  {
+    no: 34,
+    stimulus: "Saat membaca partitur musik, siswa menemukan dua simbol berbeda di awal paranada. Simbol pertama berbentuk seperti huruf G yang melingkar, sedangkan simbol kedua berbentuk seperti huruf F dengan dua titik.",
+    soal: "Tanda kunci yang biasa digunakan untuk alat musik atau suara dengan nada rendah (seperti bass) adalah tanda kunci....",
+    pilihan: ["A. Kunci G (treble clef)","B. Kunci F (bass clef)","C. Kunci C (alto clef)","D. Kunci B"],
+    kunci: "B"
+  },
+  {
+    no: 35,
+    stimulus: "Perhatikan pola ritmis berikut dalam birama 4/4: ♩ ♩ ♪♪ ♩ │ (not seperempat, not seperempat, dua not seperdelapan, not seperempat). Jumlah ketukan harus tepat 4 dalam setiap birama.",
+    soal: "Berapa jumlah ketukan total dari pola ritmis ♩ ♩ ♪♪ ♩ dalam satu birama?",
+    pilihan: ["A. 3 ketukan","B. 4 ketukan","C. 5 ketukan","D. 6 ketukan"],
+    kunci: "B"
+  }
+];
+
+const SOAL_URAIAN = [
+  {
+    no: 1,
+    stimulus: "Musik merupakan karya seni yang terbentuk dari berbagai elemen yang saling mendukung. Setiap elemen memiliki peran penting dalam menciptakan sebuah komposisi musik yang indah dan bermakna. Seorang musisi yang baik harus memahami setiap elemen tersebut.",
+    soal: "Jelaskan minimal 5 (lima) unsur dasar musik beserta pengertian masing-masing dan berikan satu contoh konkret untuk setiap unsur!",
+    skor: 10
+  },
+  {
+    no: 2,
+    stimulus: "Vokal merupakan instrumen alami yang dimiliki setiap manusia. Namun untuk menghasilkan suara vokal yang indah, seseorang perlu mempelajari dan melatih berbagai teknik bernyanyi yang benar. Teknik yang salah justru dapat merusak pita suara.",
+    soal: "Uraikan 4 (empat) teknik dasar vokal yang harus dikuasai seorang penyanyi! Jelaskan pengertian setiap teknik dan mengapa teknik tersebut penting dalam bernyanyi!",
+    skor: 10
+  },
+  {
+    no: 3,
+    stimulus: "Gamelan merupakan ansambel musik tradisional Jawa yang terdiri dari berbagai instrumen. Setiap instrumen dalam gamelan memiliki peran dan fungsi yang berbeda-beda namun saling melengkapi membentuk satu kesatuan musik yang harmonis. Gamelan diakui UNESCO sebagai Warisan Budaya Tak Benda Dunia.",
+    soal: "Sebutkan dan jelaskan fungsi minimal 5 (lima) instrumen gamelan Jawa! Sertakan juga penjelasan mengapa gamelan penting sebagai warisan budaya Indonesia!",
+    skor: 10
+  },
+  {
+    no: 4,
+    stimulus: "Ansambel musik adalah kegiatan bermain musik bersama-sama yang membutuhkan kerja sama dan koordinasi antarpemain. Tidak cukup hanya bisa memainkan alat musik secara individual — setiap anggota ansambel harus mampu mendengarkan dan menyesuaikan permainannya dengan pemain lain.",
+    soal: "Jelaskan: (a) perbedaan ansambel sejenis dan ansambel campuran beserta contohnya, (b) peran instrumen melodi, harmoni, dan ritmis dalam ansambel, serta (c) hal-hal penting yang harus diperhatikan agar ansambel terdengar harmonis!",
+    skor: 10
+  },
+  {
+    no: 5,
+    stimulus: "Notasi musik adalah sistem penulisan musik yang memungkinkan orang untuk membaca dan memainkan musik tanpa harus mendengarnya terlebih dahulu. Di Indonesia, dikenal dua jenis notasi yang umum digunakan, yaitu notasi angka dan notasi balok.",
+    soal: "Bandingkan notasi angka dan notasi balok! Jelaskan: (a) pengertian masing-masing notasi, (b) minimal 2 kelebihan dan 1 kekurangan dari setiap notasi, serta (c) dalam situasi apa setiap notasi lebih tepat digunakan!",
+    skor: 10
+  }
+];
+
+const KUNCI_PG = SOAL_PG.reduce((acc, s) => { acc[s.no] = s.kunci; return acc; }, {});
+
+export default function App() {
+  const [halaman, setHalaman] = useState("registrasi");
+  const [nama, setNama] = useState("");
+  const [kelas, setKelas] = useState("");
+  const [namaError, setNamaError] = useState("");
+  const [kelasError, setKelasError] = useState("");
+
+  const [seksi, setSeksi] = useState("pg");
+  const [nomorSoal, setNomorSoal] = useState(0);
+  const [jawabanPG, setJawabanPG] = useState({});
+  const [jawabanUraian, setJawabanUraian] = useState({});
+
+  const [sisaWaktu, setSisaWaktu] = useState(WAKTU_DETIK);
+  const [timerAktif, setTimerAktif] = useState(false);
+  const [hasilNilai, setHasilNilai] = useState(null);
+  const [konfirmasiSelesai, setKonfirmasiSelesai] = useState(false);
+  const [waktHabis, setWaktuHabis] = useState(false);
+
+  useEffect(() => {
+    if (!timerAktif) return;
+    if (sisaWaktu <= 0) {
+      setTimerAktif(false);
+      setWaktuHabis(true);
+      submitOtomatis();
+      return;
+    }
+    const id = setInterval(() => setSisaWaktu(s => s - 1), 1000);
+    return () => clearInterval(id);
+  }, [timerAktif, sisaWaktu]);
+
+  const formatWaktu = (detik) => {
+    const j = Math.floor(detik / 3600);
+    const m = Math.floor((detik % 3600) / 60);
+    const s = detik % 60;
+    return `${String(j).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  };
+
+  const mulaiUjian = () => {
+    let ok = true;
+    if (!nama.trim()) { setNamaError("Nama tidak boleh kosong"); ok = false; } else setNamaError("");
+    if (!kelas) { setKelasError("Pilih kelas terlebih dahulu"); ok = false; } else setKelasError("");
+    if (!ok) return;
+    setHalaman("soal");
+    setTimerAktif(true);
+  };
+
+  const hitungNilai = useCallback((jpg, jur) => {
+    let skorPG = 0;
+    SOAL_PG.forEach(s => {
+      if (jpg[s.no] === s.kunci) skorPG += 2;
+    });
+    const totalPG = 70;
+    const totalUraian = 50;
+    const totalMaks = 120;
+    const nilaiAkhir = Math.round((skorPG / totalMaks) * 100);
+    return { skorPG, totalPG, totalMaks, nilaiAkhir };
+  }, []);
+
+  const submitOtomatis = useCallback(() => {
+    setTimerAktif(false);
+    const hasil = hitungNilai(jawabanPG, jawabanUraian);
+    setHasilNilai(hasil);
+    setHalaman("hasil");
+  }, [jawabanPG, jawabanUraian, hitungNilai]);
+
+  const handleSelesai = () => {
+    setKonfirmasiSelesai(true);
+  };
+
+  const konfirmasiYa = () => {
+    setKonfirmasiSelesai(false);
+    submitOtomatis();
+  };
+
+  const pilihanPG = (no, jawaban) => {
+    setJawabanPG(prev => ({ ...prev, [no]: jawaban }));
+  };
+
+  const isiUraian = (no, teks) => {
+    setJawabanUraian(prev => ({ ...prev, [no]: teks }));
+  };
+
+  const soalSaatIni = seksi === "pg" ? SOAL_PG[nomorSoal] : SOAL_URAIAN[nomorSoal];
+  const totalSoalSeksi = seksi === "pg" ? SOAL_PG.length : SOAL_URAIAN.length;
+
+  const persen = Math.round(((WAKTU_DETIK - sisaWaktu) / WAKTU_DETIK) * 100);
+  const warnaTimer = sisaWaktu < 300 ? "#ef4444" : sisaWaktu < 900 ? "#f59e0b" : "#1d4ed8";
+
+  const umpanBalik = (nilai) => {
+    if (nilai >= 90) return { teks: "Luar Biasa! Kamu sangat menguasai materi Seni Musik Kelas 8. Pertahankan prestasimu!", warna: "#15803d", bg: "#f0fdf4", icon: "🏆" };
+    if (nilai >= 80) return { teks: "Sangat Baik! Pemahamanmu tentang Seni Musik sudah sangat bagus. Terus tingkatkan!", warna: "#1d4ed8", bg: "#eff6ff", icon: "⭐" };
+    if (nilai >= 70) return { teks: "Baik! Kamu sudah memahami sebagian besar materi. Pelajari kembali bagian yang masih kurang.", warna: "#0369a1", bg: "#f0f9ff", icon: "👍" };
+    if (nilai >= 60) return { teks: "Cukup. Ada beberapa materi yang perlu dipelajari ulang. Jangan menyerah ya!", warna: "#b45309", bg: "#fffbeb", icon: "📚" };
+    return { teks: "Perlu Peningkatan. Pelajari kembali semua materi Seni Musik dengan lebih tekun. Semangat!", warna: "#b91c1c", bg: "#fef2f2", icon: "💪" };
+  };
+
+  const predikHuruf = (nilai) => {
+    if (nilai >= 90) return "A";
+    if (nilai >= 80) return "B";
+    if (nilai >= 70) return "C";
+    if (nilai >= 60) return "D";
+    return "E";
+  };
+
+  const dijawabPG = Object.keys(jawabanPG).length;
+  const dijawabUraian = Object.keys(jawabanUraian).filter(k => jawabanUraian[k]?.trim()).length;
+
+  const styles = {
+    app: { fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", minHeight: "100vh", background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%)", padding: "0", margin: "0" },
+    header: { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.15)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+    headerTitle: { color: "white", fontSize: "15px", fontWeight: "600", margin: 0 },
+    headerSub: { color: "rgba(255,255,255,0.75)", fontSize: "12px", margin: 0 },
+    timer: { background: "rgba(0,0,0,0.25)", borderRadius: "8px", padding: "6px 14px", display: "flex", alignItems: "center", gap: "8px" },
+    timerTeks: { color: warnaTimer, fontWeight: "700", fontSize: "18px", fontVariantNumeric: "tabular-nums", letterSpacing: "1px" },
+    card: { background: "white", borderRadius: "16px", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", margin: "0 auto", maxWidth: "760px" },
+    btn: { background: "#1d4ed8", color: "white", border: "none", borderRadius: "8px", padding: "10px 24px", fontSize: "14px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" },
+    btnOutline: { background: "transparent", color: "#1d4ed8", border: "2px solid #1d4ed8", borderRadius: "8px", padding: "10px 24px", fontSize: "14px", fontWeight: "600", cursor: "pointer" },
+    btnSm: { background: "#1d4ed8", color: "white", border: "none", borderRadius: "6px", padding: "6px 14px", fontSize: "13px", cursor: "pointer" },
+    stimulus: { background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "10px", padding: "14px 16px", marginBottom: "16px", fontSize: "14px", lineHeight: "1.7", color: "#0c4a6e" },
+    stimulusLabel: { fontSize: "11px", fontWeight: "700", color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" },
+    pilihanBtn: (dipilih) => ({
+      width: "100%", textAlign: "left", padding: "12px 14px", marginBottom: "8px", borderRadius: "8px",
+      border: dipilih ? "2px solid #1d4ed8" : "1.5px solid #e2e8f0",
+      background: dipilih ? "#eff6ff" : "white", color: dipilih ? "#1e40af" : "#374151",
+      cursor: "pointer", fontSize: "14px", fontWeight: dipilih ? "600" : "400", transition: "all 0.15s"
+    }),
+    navBtn: (aktif) => ({
+      width: "36px", height: "36px", borderRadius: "6px", border: "none",
+      background: aktif ? "#1d4ed8" : "#e2e8f0",
+      color: aktif ? "white" : "#6b7280",
+      fontWeight: "600", fontSize: "13px", cursor: "pointer"
+    }),
+    input: { width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "14px", outline: "none", boxSizing: "border-box" },
+    select: { width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "14px", outline: "none", background: "white", boxSizing: "border-box" },
+    textarea: { width: "100%", minHeight: "140px", padding: "12px 14px", borderRadius: "8px", border: "1.5px solid #e2e8f0", fontSize: "14px", lineHeight: "1.6", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" },
+  };
+
+  if (halaman === "registrasi") {
+    return (
+      <div style={styles.app}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "20px" }}>
+          <div style={{ ...styles.card, width: "100%", maxWidth: "480px", padding: "40px 36px" }}>
+            <div style={{ textAlign: "center", marginBottom: "32px" }}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎵</div>
+              <h1 style={{ fontSize: "22px", fontWeight: "700", color: "#1e3a8a", margin: "0 0 6px" }}>ASESMEN SUMATIF</h1>
+              <h2 style={{ fontSize: "17px", fontWeight: "600", color: "#1d4ed8", margin: "0 0 4px" }}>Seni Musik — Kelas VIII</h2>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: "0" }}>SMP/MTs • 35 PG + 5 Uraian • 90 Menit</p>
+            </div>
+            <div style={{ background: "#fafafa", borderRadius: "10px", padding: "16px", marginBottom: "24px", fontSize: "13px", color: "#374151" }}>
+              <div style={{ fontWeight: "600", marginBottom: "8px", color: "#1e3a8a" }}>📋 Petunjuk Umum:</div>
+              {["Berdoalah sebelum mengerjakan soal.","Isi nama dan kelas dengan benar.","Bacalah setiap soal dengan teliti.","Kerjakan PG terlebih dahulu, lalu Uraian.","Periksa kembali jawaban sebelum selesai."].map((p,i) => (
+                <div key={i} style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ color: "#1d4ed8", fontWeight: "600" }}>{i+1}.</span><span>{p}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Nama Lengkap *</label>
+              <input style={{ ...styles.input, borderColor: namaError ? "#ef4444" : "#e2e8f0" }} value={nama} onChange={e => setNama(e.target.value)} placeholder="Tulis nama lengkap kamu..." />
+              {namaError && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0" }}>{namaError}</p>}
+            </div>
+            <div style={{ marginBottom: "28px" }}>
+              <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Kelas *</label>
+              <select style={{ ...styles.select, borderColor: kelasError ? "#ef4444" : "#e2e8f0" }} value={kelas} onChange={e => setKelas(e.target.value)}>
+                <option value="">-- Pilih Kelas --</option>
+                {KELAS_OPTIONS.map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+              {kelasError && <p style={{ color: "#ef4444", fontSize: "12px", margin: "4px 0 0" }}>{kelasError}</p>}
+            </div>
+            <button style={{ ...styles.btn, width: "100%", padding: "13px", fontSize: "15px" }} onClick={mulaiUjian}>
+              Mulai Ujian →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (halaman === "soal") {
+    return (
+      <div style={styles.app}>
+        {/* Header */}
+        <div style={styles.header}>
+          <div>
+            <p style={styles.headerTitle}>🎵 Seni Musik Kelas VIII</p>
+            <p style={styles.headerSub}>{nama} • Kelas {kelas}</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)", textAlign: "right" }}>
+              <div>PG: {dijawabPG}/35</div>
+              <div>Uraian: {dijawabUraian}/5</div>
+            </div>
+            <div style={styles.timer}>
+              <span style={{ fontSize: "16px" }}>{sisaWaktu < 300 ? "⚠️" : "⏱"}</span>
+              <span style={styles.timerTeks}>{formatWaktu(sisaWaktu)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ height: "3px", background: "rgba(255,255,255,0.2)" }}>
+          <div style={{ height: "100%", width: `${persen}%`, background: warnaTimer, transition: "width 1s linear" }} />
+        </div>
+
+        <div style={{ display: "flex", gap: "16px", padding: "16px", maxWidth: "1100px", margin: "0 auto" }}>
+          {/* Panel kiri: navigasi soal */}
+          <div style={{ width: "200px", flexShrink: 0 }}>
+            <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "14px" }}>
+              {/* Tombol seksi */}
+              <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
+                <button onClick={() => { setSeksi("pg"); setNomorSoal(0); }}
+                  style={{ flex: 1, padding: "6px 0", borderRadius: "6px", border: "none", fontWeight: "600", fontSize: "12px", cursor: "pointer",
+                    background: seksi === "pg" ? "white" : "rgba(255,255,255,0.2)", color: seksi === "pg" ? "#1d4ed8" : "white" }}>
+                  PG (35)
+                </button>
+                <button onClick={() => { setSeksi("uraian"); setNomorSoal(0); }}
+                  style={{ flex: 1, padding: "6px 0", borderRadius: "6px", border: "none", fontWeight: "600", fontSize: "12px", cursor: "pointer",
+                    background: seksi === "uraian" ? "white" : "rgba(255,255,255,0.2)", color: seksi === "uraian" ? "#1d4ed8" : "white" }}>
+                  Uraian (5)
+                </button>
+              </div>
+
+              {/* Grid nomor soal */}
+              {seksi === "pg" && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "4px" }}>
+                  {SOAL_PG.map((s, i) => {
+                    const dijawab = jawabanPG[s.no];
+                    const aktif = nomorSoal === i && seksi === "pg";
+                    return (
+                      <button key={i} onClick={() => setNomorSoal(i)}
+                        style={{ width: "32px", height: "32px", borderRadius: "6px", border: aktif ? "2px solid white" : "none",
+                          background: aktif ? "white" : dijawab ? "#22c55e" : "rgba(255,255,255,0.2)",
+                          color: aktif ? "#1d4ed8" : dijawab ? "white" : "rgba(255,255,255,0.8)",
+                          fontWeight: "600", fontSize: "11px", cursor: "pointer" }}>
+                        {s.no}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {seksi === "uraian" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {SOAL_URAIAN.map((s, i) => {
+                    const dijawab = jawabanUraian[s.no]?.trim();
+                    const aktif = nomorSoal === i && seksi === "uraian";
+                    return (
+                      <button key={i} onClick={() => setNomorSoal(i)}
+                        style={{ padding: "6px 10px", borderRadius: "6px", border: aktif ? "2px solid white" : "none", textAlign: "left",
+                          background: aktif ? "white" : dijawab ? "#22c55e" : "rgba(255,255,255,0.2)",
+                          color: aktif ? "#1d4ed8" : dijawab ? "white" : "rgba(255,255,255,0.8)",
+                          fontWeight: "600", fontSize: "12px", cursor: "pointer" }}>
+                        Soal {s.no}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Legend */}
+              <div style={{ marginTop: "14px", fontSize: "11px", color: "rgba(255,255,255,0.7)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                  <div style={{ width: "14px", height: "14px", borderRadius: "3px", background: "#22c55e" }} /> Sudah dijawab
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <div style={{ width: "14px", height: "14px", borderRadius: "3px", background: "rgba(255,255,255,0.2)" }} /> Belum dijawab
+                </div>
+              </div>
+
+              {/* Tombol selesai */}
+              <button onClick={handleSelesai}
+                style={{ width: "100%", marginTop: "16px", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", padding: "10px", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}>
+                Selesai & Kirim
+              </button>
+            </div>
+          </div>
+
+          {/* Panel kanan: soal */}
+          <div style={{ flex: 1 }}>
+            <div style={{ background: "white", borderRadius: "14px", padding: "24px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+              {/* Judul seksi */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <div>
+                  <span style={{ background: "#1d4ed8", color: "white", fontSize: "11px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", letterSpacing: "0.5px" }}>
+                    {seksi === "pg" ? "PILIHAN GANDA" : "URAIAN"}
+                  </span>
+                  <span style={{ marginLeft: "10px", fontSize: "14px", color: "#6b7280", fontWeight: "600" }}>
+                    Soal {soalSaatIni.no} dari {totalSoalSeksi}
+                  </span>
+                </div>
+                {seksi === "uraian" && <span style={{ fontSize: "12px", color: "#6b7280" }}>Skor maks: {soalSaatIni.skor} poin</span>}
+              </div>
+
+              {/* Stimulus */}
+              <div style={styles.stimulus}>
+                <div style={styles.stimulusLabel}>📌 Perhatikan stimulus berikut:</div>
+                <div>{soalSaatIni.stimulus}</div>
+              </div>
+
+              {/* Nomor & pertanyaan */}
+              <div style={{ marginBottom: "20px" }}>
+                <p style={{ fontSize: "15px", fontWeight: "600", color: "#1e293b", lineHeight: "1.6", margin: 0 }}>
+                  <span style={{ color: "#1d4ed8" }}>{soalSaatIni.no}.</span> {soalSaatIni.soal}
+                </p>
+              </div>
+
+              {/* Pilihan / textarea */}
+              {seksi === "pg" ? (
+                <div>
+                  {soalSaatIni.pilihan.map((p, i) => {
+                    const huruf = p[0];
+                    const dipilih = jawabanPG[soalSaatIni.no] === huruf;
+                    return (
+                      <button key={i} onClick={() => pilihanPG(soalSaatIni.no, huruf)} style={styles.pilihanBtn(dipilih)}>
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div>
+                  <textarea
+                    style={styles.textarea}
+                    value={jawabanUraian[soalSaatIni.no] || ""}
+                    onChange={e => isiUraian(soalSaatIni.no, e.target.value)}
+                    placeholder="Tulis jawaban kamu di sini..."
+                  />
+                  <p style={{ fontSize: "12px", color: "#9ca3af", margin: "4px 0 0" }}>
+                    {(jawabanUraian[soalSaatIni.no] || "").length} karakter
+                  </p>
+                </div>
+              )}
+
+              {/* Navigasi */}
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #f1f5f9" }}>
+                <button
+                  onClick={() => {
+                    if (nomorSoal > 0) setNomorSoal(n => n - 1);
+                    else if (seksi === "uraian") { setSeksi("pg"); setNomorSoal(SOAL_PG.length - 1); }
+                  }}
+                  style={{ ...styles.btnOutline, padding: "8px 18px", fontSize: "13px" }}
+                  disabled={nomorSoal === 0 && seksi === "pg"}
+                >
+                  ← Sebelumnya
+                </button>
+                <button
+                  onClick={() => {
+                    if (nomorSoal < totalSoalSeksi - 1) setNomorSoal(n => n + 1);
+                    else if (seksi === "pg") { setSeksi("uraian"); setNomorSoal(0); }
+                  }}
+                  style={{ ...styles.btn, padding: "8px 18px", fontSize: "13px" }}
+                  disabled={nomorSoal === totalSoalSeksi - 1 && seksi === "uraian"}
+                >
+                  Selanjutnya →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal konfirmasi */}
+        {konfirmasiSelesai && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+            <div style={{ background: "white", borderRadius: "16px", padding: "32px", maxWidth: "400px", width: "90%", textAlign: "center" }}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>📤</div>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#1e293b", margin: "0 0 8px" }}>Konfirmasi Pengiriman</h3>
+              <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 8px" }}>PG dijawab: <strong>{dijawabPG}/35</strong> | Uraian dijawab: <strong>{dijawabUraian}/5</strong></p>
+              <p style={{ fontSize: "13px", color: "#ef4444", margin: "0 0 24px" }}>Setelah dikirim, jawaban tidak dapat diubah lagi.</p>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                <button style={{ ...styles.btnOutline, padding: "10px 22px" }} onClick={() => setKonfirmasiSelesai(false)}>Kembali</button>
+                <button style={{ ...styles.btn, padding: "10px 22px" }} onClick={konfirmasiYa}>Ya, Kirim Sekarang</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (halaman === "hasil") {
+    const fb = umpanBalik(hasilNilai.nilaiAkhir);
+    const huruf = predikHuruf(hasilNilai.nilaiAkhir);
+    const benar = SOAL_PG.filter(s => jawabanPG[s.no] === s.kunci).length;
+    const salah = SOAL_PG.filter(s => jawabanPG[s.no] && jawabanPG[s.no] !== s.kunci).length;
+    const kosong = SOAL_PG.filter(s => !jawabanPG[s.no]).length;
+
+    return (
+      <div style={styles.app}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "20px" }}>
+          <div style={{ ...styles.card, width: "100%", maxWidth: "640px", padding: "40px 36px" }}>
+            {waktHabis && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px", textAlign: "center", fontSize: "14px", color: "#991b1b", fontWeight: "600" }}>
+                ⏰ Waktu ujian telah habis. Jawaban otomatis dikirim.
+              </div>
+            )}
+
+            <div style={{ textAlign: "center", marginBottom: "28px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "8px" }}>{fb.icon}</div>
+              <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#1e3a8a", margin: "0 0 4px" }}>Hasil Ujian Seni Musik</h1>
+              <p style={{ fontSize: "14px", color: "#64748b", margin: 0 }}>{nama} — Kelas {kelas}</p>
+            </div>
+
+            {/* Nilai besar */}
+            <div style={{ textAlign: "center", margin: "0 0 28px" }}>
+              <div style={{ display: "inline-block", background: `linear-gradient(135deg, #1e3a8a, #1d4ed8)`, borderRadius: "50%", width: "120px", height: "120px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", flexDirection: "column" }}>
+                <span style={{ color: "white", fontSize: "36px", fontWeight: "700", lineHeight: 1 }}>{hasilNilai.nilaiAkhir}</span>
+                <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}>/ 100</span>
+              </div>
+              <div style={{ fontSize: "28px", fontWeight: "700", color: fb.warna }}>Predikat {huruf}</div>
+            </div>
+
+            {/* Rincian */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {[
+                { label: "Jawaban Benar", nilai: benar, warna: "#15803d", bg: "#f0fdf4" },
+                { label: "Jawaban Salah", nilai: salah, warna: "#b91c1c", bg: "#fef2f2" },
+                { label: "Tidak Dijawab", nilai: kosong, warna: "#6b7280", bg: "#f8fafc" },
+              ].map((item, i) => (
+                <div key={i} style={{ background: item.bg, borderRadius: "10px", padding: "14px 12px", textAlign: "center" }}>
+                  <div style={{ fontSize: "26px", fontWeight: "700", color: item.warna }}>{item.nilai}</div>
+                  <div style={{ fontSize: "11px", color: item.warna, fontWeight: "600", marginTop: "2px" }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              <div style={{ background: "#f0f9ff", borderRadius: "10px", padding: "14px 16px" }}>
+                <div style={{ fontSize: "12px", color: "#0369a1", fontWeight: "600", marginBottom: "4px" }}>Skor Pilihan Ganda</div>
+                <div style={{ fontSize: "22px", fontWeight: "700", color: "#0c4a6e" }}>{hasilNilai.skorPG} <span style={{ fontSize: "14px", color: "#64748b" }}>/ 70</span></div>
+              </div>
+              <div style={{ background: "#fefce8", borderRadius: "10px", padding: "14px 16px" }}>
+                <div style={{ fontSize: "12px", color: "#854d0e", fontWeight: "600", marginBottom: "4px" }}>Nilai Akhir</div>
+                <div style={{ fontSize: "22px", fontWeight: "700", color: "#713f12" }}>{hasilNilai.nilaiAkhir} <span style={{ fontSize: "14px", color: "#64748b" }}>/ 100</span></div>
+              </div>
+            </div>
+
+            {/* Umpan balik */}
+            <div style={{ background: fb.bg, border: `1px solid ${fb.warna}30`, borderRadius: "12px", padding: "16px 18px", marginBottom: "24px" }}>
+              <div style={{ fontSize: "15px", fontWeight: "600", color: fb.warna, marginBottom: "4px" }}>Umpan Balik</div>
+              <div style={{ fontSize: "14px", color: fb.warna, lineHeight: "1.6" }}>{fb.teks}</div>
+            </div>
+
+            {/* Catatan uraian */}
+            <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "14px 16px", marginBottom: "24px", fontSize: "13px", color: "#64748b" }}>
+              <strong style={{ color: "#374151" }}>📝 Catatan:</strong> Skor soal uraian (maks. 50 poin) dinilai oleh guru secara terpisah. Nilai yang ditampilkan di atas hanya mencerminkan skor pilihan ganda.
+            </div>
+
+            <button
+              onClick={() => { setHalaman("registrasi"); setJawabanPG({}); setJawabanUraian({}); setSisaWaktu(WAKTU_DETIK); setTimerAktif(false); setHasilNilai(null); setWaktuHabis(false); setNama(""); setKelas(""); setNomorSoal(0); setSeksi("pg"); }}
+              style={{ ...styles.btn, width: "100%", padding: "13px", fontSize: "15px" }}>
+              Kerjakan Ulang →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
